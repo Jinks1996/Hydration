@@ -1,0 +1,24 @@
+HydrationStateMachine:
+  name: ${self:custom.environment.${opt:stage, self:provider.stage}.HYDRATION_STATE_MACHINE}
+  definition:
+    Comment: 'Hydration State Machine'
+    StartAt: hydration-processor
+    States:
+      hydration-processor:
+        Type: Map
+        InputPath: $.data
+        ItemsPath: $.chunks
+        MaxConcurrency: 1
+        ResultPath: $.data.chunks
+        Parameters:
+          parcel.$: $$.Map.Item.Value
+        Iterator:
+          StartAt: load-data-from-chunk
+          States:
+            load-data-from-chunk:
+              Type: Task
+              Resource: !GetAtt
+                - chunk-loader
+                - Arn
+              End: true
+        End: true
